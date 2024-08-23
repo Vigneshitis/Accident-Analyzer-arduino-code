@@ -1,0 +1,96 @@
+#include "NewPing.h"
+#include <LiquidCrystal_I2C.h>
+#include <SoftwareSerial.h>
+LiquidCrystal_I2C lcd(0x27,16,2);
+#define TRIGGER_PIN 9
+#define ECHO_PIN 10
+#define handbreak 3
+#define MQ3 7
+#define eyeblink 8
+
+
+#define MAX_DISTANCE 400 
+NewPing sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE);
+ 
+void setup() {
+   Serial.begin(9600);
+   pinMode(handbreak,INPUT_PULLUP);
+   pinMode(MQ3,INPUT);
+   pinMode(eyeblink,INPUT);
+    lcd.init();
+    lcd.backlight();
+    lcd.setCursor (0,0);
+    lcd.print("Accident analysis");
+    delay(2000);
+    lcd.clear();
+  
+}
+
+void loop() {
+  Serial.print("Distance = ");
+  Serial.print(sonar.ping_cm());
+  Serial.println(" cm");
+  delay(500);
+
+  int handbreak_state=digitalRead(handbreak);
+  int MQ3_state=digitalRead(MQ3);
+  int eyeblink_state=digitalRead(eyeblink);
+
+  Serial.print("handbreak_state = ");
+  Serial.println(handbreak_state);
+  Serial.print("MQ3_state       = ");
+  Serial.println(MQ3_state);
+  Serial.print("eyeblink_state  = ");
+  Serial.println(eyeblink_state);
+  
+
+  if ((MQ3_state == LOW) && (eyeblink_state == LOW))
+  {
+    Serial.println("Driver is drunk/sleeping");
+    lcd.setCursor (0,0);
+    lcd.print("Driver Drnk/Slp");
+    delay(500);
+    
+  }
+
+  else
+  {
+    lcd.setCursor (0,0);       
+    lcd.print("Driver Normal  ");
+    delay(500);
+  }
+
+  
+
+   if (sonar.ping_cm() < 5)
+  {
+    Serial.println("OBSTACLE DETECTED "); 
+    lcd.setCursor (0,1); 
+    lcd.print("your fault     ");
+    delay(100);
+         if(handbreak_state == LOW)
+         {
+            Serial.println("Accident Occured by other Person"); 
+            lcd.setCursor (0,1);
+            lcd.print("HIT by others");
+            delay(500);
+            
+         }
+
+                else{
+
+                  Serial.println("Its driver fault"); 
+              //    lcd.setCursor (0,1);        
+               //   lcd.print("Vehicle safe     ");
+               //   delay(100);
+                }
+  
+  }
+
+  else
+  {
+    
+     Serial.println("OBSTACLE NOT DETECTED");
+     delay(1000);
+  }
+}
